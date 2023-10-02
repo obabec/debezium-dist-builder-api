@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="test">
+
+</div>
+
+<script th:inline="javascript">
+
+    function generateOptionsHtml() {
+
+    }
+
+    function generateConfigHtml() {
+
+    }
+
+    function generateConfigItemHtml() {
+
+    }
+
+    function createServerHtmlVariants(variants, targetElement) {
+        let arr = document.createElement("ul");
+        for (let i = 0; i < variants.length; i++) {
+            let arrItem = document.createElement("li");
+            arrItem.innerHTML = variants[i];
+            arr.appendChild(arrItem);
+        }
+        targetElement.appendChild(arr);
+    }
+    function createServerHtmlFields(fieldList, targetElement) {
+        let arr = document.createElement("ul");
+        for (let i = 0; i < fieldList.length; i++) {
+            let arrItem = document.createElement("li");
+            if (fieldList[i].type === "interface") {
+                arrItem.innerHTML = fieldList[i].name;
+                let hd = document.createElement("h5");
+                hd.innerHTML = "Options";
+                arrItem.appendChild(hd);
+                generateOptionsHtml();
+                createServerHtmlFields(fieldList[i].options, arrItem);
+
+            } else if (fieldList[i].type === "enum") {
+                arrItem.innerHTML = fieldList[i].name;
+                createServerHtmlVariants(fieldList[i].variants, arrItem);
+            } else if (fieldList[i].type === "class"){
+                if (fieldList[i].name == null) {
+                    arrItem.innerHTML = fieldList[i].clazz
+                    let hd = document.createElement("h5")
+                    hd.innerHTML = "Config"
+                    generateConfigHtml();
+                    arrItem.appendChild(hd);
+                } else {
+                    arrItem.innerHTML = fieldList[i].name;
+                    generateConfigItemHtml();
+                }
+
+                createServerHtmlFields(fieldList[i].fields, arrItem)
+            } else {
+                arrItem.innerHTML = fieldList[i].name + "  --  " + fieldList[i].type;
+            }
+            arr.appendChild(arrItem);
+        }
+        targetElement.appendChild(arr);
+    }
+
+    let serverMetadata = /*[[${serverMetadata}]]*/ {};
+    console.log(serverMetadata);
+
+    const testDiv = document.getElementById("test");
+
+    let fields = serverMetadata.fields;
+
+    console.log(testDiv);
+    createServerHtmlFields(fields, testDiv);
+</script>
+
+</body>
+</html>
