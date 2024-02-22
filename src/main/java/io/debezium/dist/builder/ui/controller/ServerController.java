@@ -1,7 +1,7 @@
 package io.debezium.dist.builder.ui.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.debezium.server.dist.builder.DebeziumServer;
+import io.debezium.server.dist.builder.CustomDebeziumServer;
 import io.debezium.server.dist.builder.DebeziumServerDistributionBuilder;
 import io.debezium.server.dist.builder.utils.DeserializationUtils;
 import org.slf4j.Logger;
@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 
+import static java.util.Objects.nonNull;
+
 @Controller
 @CrossOrigin(origins = "*")
 public class ServerController {
@@ -40,17 +42,16 @@ public class ServerController {
             value = "/generateDistribution",
             method = RequestMethod.POST,
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    ResponseEntity<Object> getMainPage(@RequestParam("distribution") String distribution, @RequestParam("truststore") MultipartFile truststore, @RequestParam("keystore") MultipartFile keystore) {
+    ResponseEntity<Object> getMainPage(@RequestParam("distribution") String distribution, @RequestParam(value = "truststore", required = false) MultipartFile truststore, @RequestParam(value = "keystore", required = false) MultipartFile keystore) {
         ObjectMapper objectMapper = DeserializationUtils.getDefaultMapper();
         storeMultipartFile(keystore);
         storeMultipartFile(truststore);
         ByteArrayResource resource;
         try {
-            DebeziumServer server = objectMapper.readValue(distribution, DebeziumServer.class);
+            CustomDebeziumServer server = objectMapper.readValue(distribution, CustomDebeziumServer.class);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             new DebeziumServerDistributionBuilder()
                     .withDebeziumServer(server)
-                    .withVersion("2.3.2.Final")
                     .withLocalProject(repositoryPath)
                     .build()
                     .generateConfigurationProperties()
@@ -76,15 +77,16 @@ public class ServerController {
     }
 
     private void storeMultipartFile(MultipartFile file) {
-        File f = new File(repositoryPath + file.getOriginalFilename());
-        if (f.exists()) {
-            f.delete();
+        if (nonNull(file)) {
+            File f = new File(repositoryPath + file.getOriginalFilename());
+            if (f.exists()) {
+                f.delete();
+            }
+            try (OutputStream os = new FileOutputStream(f)) {
+                os.write(file.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
-        try (OutputStream os = new FileOutputStream(f)) {
-            os.write(file.getBytes());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
     }
 }
