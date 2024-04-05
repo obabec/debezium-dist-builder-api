@@ -1,5 +1,12 @@
 package io.debezium.dist.builder.ui.controller;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.debezium.server.dist.builder.CustomDebeziumServer;
 import io.debezium.server.dist.builder.DebeziumServerDistributionBuilder;
@@ -13,20 +20,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ServerWebExchange;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
 
 import static java.util.Objects.nonNull;
 
@@ -58,9 +55,8 @@ public class ServerController {
                     .zipDistribution(repositoryPath, bos);
 
             resource = new ByteArrayResource(bos.toByteArray());
-            int x = 5;
         } catch (IOException e) {
-            LOGGER.error("Error occured: " + e.getMessage());
+            LOGGER.error("Error occurred during generateDistribution POST: " + e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(resource, HttpStatus.OK);
