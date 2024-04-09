@@ -1,0 +1,43 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: api-dist-builder
+  labels:
+    app: api-dist-builder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-dist-builder
+  template:
+    metadata:
+      labels:
+        app: api-dist-builder
+    spec:
+      volumes:
+        - name: api-claim
+          persistentVolumeClaim:
+            claimName: "pi-pv-claim"
+      containers:
+        - resources: {}
+          name: api
+          ports:
+            - containerPort: 7200
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: api-claim
+              mountPath: /tmp
+          livenessProbe:
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 7200
+            timeoutSeconds: 1
+          terminationMessagePolicy: File
+          terminationMessagePath: /dev/termination-log
+          image: API_IMAGE
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: Recreate
